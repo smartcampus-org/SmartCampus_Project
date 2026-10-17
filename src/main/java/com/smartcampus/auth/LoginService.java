@@ -5,7 +5,7 @@ import java.util.logging.Logger;
 public class LoginService {
 
     private static final Logger LOGGER = Logger.getLogger(LoginService.class.getName());
-    private static final int MIN_PASSWORD_LENGTH = 8;
+    private static final int MIN_PASSWORD_LENGTH = 10;
 
     public boolean validate(String username, String password) {
         if (username == null || password == null) {
