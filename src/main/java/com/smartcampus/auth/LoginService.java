@@ -8,4 +8,8 @@ public class LoginService {
         }
         return !username.isEmpty() && !password.isEmpty();
     }
+
+    public void logout(String username) {
+        System.out.println("Utilisateur déconnecté : " + username);
+    }
 }
