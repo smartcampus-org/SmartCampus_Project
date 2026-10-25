@@ -30,22 +30,18 @@ pipeline {
         // ── 2. Compilation ──────────────────────────────
         stage('Build') {
             steps {
-                dir('SmartCampus_Project') {
-                    sh 'mvn clean compile -q'
-                }
+                sh 'mvn clean compile -q'
             }
         }
 
         // ── 3. Tests unitaires (SC-96) ──────────────────
         stage('Unit Tests') {
             steps {
-                dir('SmartCampus_Project') {
-                    sh 'mvn test -Dspring.profiles.active=test -q'
-                }
+                sh 'mvn test -Dspring.profiles.active=test -q'
             }
             post {
                 always {
-                    junit 'SmartCampus_Project/target/surefire-reports/*.xml'
+                    junit 'target/surefire-reports/*.xml'
                 }
             }
         }
@@ -53,13 +49,11 @@ pipeline {
         // ── 4. Tests d'intégration (SC-97) ──────────────
         stage('Integration Tests') {
             steps {
-                dir('SmartCampus_Project') {
-                    sh 'mvn verify -Dspring.profiles.active=test -q'
-                }
+                sh 'mvn verify -Dspring.profiles.active=test -q'
             }
             post {
                 always {
-                    junit 'SmartCampus_Project/target/failsafe-reports/*.xml'
+                    junit 'target/failsafe-reports/*.xml'
                 }
             }
         }
@@ -67,11 +61,8 @@ pipeline {
         // ── 5. Packaging ─────────────────────────────────
         stage('Package') {
             steps {
-                dir('SmartCampus_Project') {
-                    sh 'mvn package -DskipTests -q'
-                }
-                archiveArtifacts artifacts: 'SmartCampus_Project/target/*.jar',
-                                 fingerprint: true
+                sh 'mvn package -DskipTests -q'
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
 
@@ -84,10 +75,8 @@ pipeline {
                 }
             }
             steps {
-                dir('SmartCampus_Project') {
-                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                    sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
-                }
+                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
             }
         }
 
@@ -96,12 +85,10 @@ pipeline {
             when { branch 'main' }
             steps {
                 echo "Déploiement de la version ${DOCKER_TAG} sur l'environnement de staging..."
-                dir('SmartCampus_Project') {
-                    sh """
-                        docker-compose down --remove-orphans || true
-                        docker-compose up -d
-                    """
-                }
+                sh """
+                    docker-compose down --remove-orphans || true
+                    docker-compose up -d
+                """
             }
         }
     }
