@@ -37,11 +37,12 @@ pipeline {
         // ── 3. Tests unitaires (SC-96) ──────────────────
         stage('Unit Tests') {
             steps {
-                sh 'mvn test -Dspring.profiles.active=test -q'
+                sh 'mvn test "-Dspring.profiles.active=test"'
             }
             post {
                 always {
-                    junit 'target/surefire-reports/*.xml'
+                    junit allowEmptyResults: true,
+                          testResults: 'target/surefire-reports/*.xml'
                 }
             }
         }
@@ -49,11 +50,12 @@ pipeline {
         // ── 4. Tests d'intégration (SC-97) ──────────────
         stage('Integration Tests') {
             steps {
-                sh 'mvn verify -Dspring.profiles.active=test -q'
+                sh 'mvn verify "-Dspring.profiles.active=test"'
             }
             post {
                 always {
-                    junit 'target/failsafe-reports/*.xml'
+                    junit allowEmptyResults: true,
+                          testResults: 'target/failsafe-reports/*.xml'
                 }
             }
         }
