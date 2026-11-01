@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * SC-100 — Configuration de la documentation OpenAPI / Swagger UI.
- * Accessible à : http://localhost:8080/swagger-ui.html
+ * SC-100 / TECH 1 — Configuration de la documentation OpenAPI / Swagger UI.
+ * Accessible à : http://localhost:8083/swagger-ui.html
+ * <p>
+ * Sprint 2 : ajout des modules Salles, Bâtiments et Équipements.
  */
 @Configuration
 public class OpenApiConfig {
@@ -21,13 +23,23 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("SmartCampus API")
-                        .description("API REST du système d'authentification SmartCampus. " +
-                                "Gestion des utilisateurs, des rôles et de la sécurité.")
-                        .version("1.0.0")
+                        .description("""
+                                API REST de la plateforme SmartCampus.
+                                
+                                **Modules disponibles :**
+                                - 🔐 Authentification (JWT, inscription, réinitialisation de mot de passe)
+                                - 👤 Profil utilisateur
+                                - 🏛️ Bâtiments (gestion du campus)
+                                - 🚪 Salles (catalogue, recherche, statuts, historique)
+                                - 🖥️ Équipements (par salle)
+                                - 📤 Export CSV
+                                
+                                **Rôles :** ADMIN · PERSONNEL · PROFESSEUR · ETUDIANT
+                                """)
+                        .version("2.0.0")
                         .contact(new Contact()
                                 .name("Équipe SmartCampus")
                                 .email("contact@smartcampus.ma")))
-                // Déclaration du schéma Bearer JWT pour le bouton "Authorize" de Swagger UI
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth",
                                 new SecurityScheme()

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+// BACKEND 3/4/5 — Exceptions métier des salles
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -63,6 +65,46 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleUserNotFound(
             UserNotFoundException ex) {
 
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    // BACKEND 1/3 — Bâtiment introuvable
+    @ExceptionHandler(BuildingNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleBuildingNotFound(
+            BuildingNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    // BACKEND 1/3 — Nom de bâtiment déjà utilisé
+    @ExceptionHandler(BuildingNameAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleBuildingNameExists(
+            BuildingNameAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    // BACKEND 2/3 — Salle introuvable
+    @ExceptionHandler(RoomNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleRoomNotFound(
+            RoomNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    // BACKEND 3 — Numéro de salle déjà utilisé dans le bâtiment
+    @ExceptionHandler(RoomNumberAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleRoomNumberExists(
+            RoomNumberAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    // BACKEND 4 — Équipement introuvable
+    @ExceptionHandler(EquipmentNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleEquipmentNotFound(
+            EquipmentNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("message", ex.getMessage()));
     }
