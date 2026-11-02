@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import StatusBadge from '../components/StatusBadge'
 import RoomTypeBadge from '../components/RoomTypeBadge'
 import ConfirmModal from '../components/ConfirmModal'
+import EquipmentList from '../components/EquipmentList'
 import { roomAPI } from '../services/api'
 
 /**
@@ -31,13 +32,18 @@ export default function RoomDetail() {
   const [deleteOpen,    setDeleteOpen]    = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError,   setDeleteError]   = useState('')
+  // SC-111 — équipements gérés localement pour permettre la mise à jour inline
+  const [equipments, setEquipments] = useState([])
 
   // Message de succès transmis depuis RoomForm (après create/edit)
   const successMsg = location.state?.success ?? ''
 
   useEffect(() => {
     roomAPI.getById(id)
-      .then(res => setRoom(res.data))
+      .then(res => {
+        setRoom(res.data)
+        setEquipments(res.data.equipments ?? [])
+      })
       .catch(err => {
         setError(err.response?.status === 404 ? '404' : (err.response?.data?.message || 'Impossible de charger la salle.'))
       })
@@ -258,30 +264,24 @@ export default function RoomDetail() {
             <h2 style={{ margin: 0, borderBottom: 'none', paddingBottom: 0 }}>
               🖥️ Équipements
               <span style={{ marginLeft: 8, fontSize: 13, fontWeight: 500, color: '#9ca3af' }}>
-                ({room.equipments?.length ?? 0})
+                ({equipments.length})
               </span>
             </h2>
-            {canMutate && (
-              <button
-                className="btn btn-outline"
-                style={{ width: 'auto', padding: '6px 14px', fontSize: 13 }}
-                onClick={() => navigate(`/rooms/${room.id}/equipments`)}
-              >
-                + Gérer
-              </button>
-            )}
+            <Link
+              to={`/rooms/${room.id}/equipments`}
+              style={{ fontSize: 13, color: '#2563eb', textDecoration: 'none', fontWeight: 500 }}
+              aria-label="Voir la page complète des équipements"
+            >
+              Voir tout →
+            </Link>
           </div>
-
-          {!room.equipments || room.equipments.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 0', color: '#9ca3af' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>
-              <p style={{ fontSize: 14 }}>Aucun équipement enregistré pour cette salle.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {room.equipments.map(eq => <EquipmentRow key={eq.id} equipment={eq} />)}
-            </div>
-          )}
+          {/* SC-111 — Liste interactive inline */}
+          <EquipmentList
+            roomId={room.id}
+            equipments={equipments}
+            canMutate={canMutate}
+            onUpdated={setEquipments}
+          />
         </div>
 
         {/* ── Historique des statuts ── */}
@@ -340,34 +340,6 @@ function InfoItem({ label, value, icon }) {
       </div>
       <div style={{ fontSize: 15, fontWeight: 500, color: '#1f2937' }}>
         {value ?? '—'}
-      </div>
-    </div>
-  )
-}
-
-function EquipmentRow({ equipment }) {
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 12,
-      padding: '10px 14px', background: '#f9fafb',
-      borderRadius: 8, border: '1px solid #e5e7eb',
-    }}>
-      <span style={{ fontSize: 20 }}>🖥️</span>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>{equipment.name}</div>
-        <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
-          {equipment.type}{equipment.notes && ` · ${equipment.notes}`}
-        </div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>x{equipment.quantity}</span>
-        <span style={{
-          fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10,
-          background: equipment.functional ? '#d1fae5' : '#fee2e2',
-          color:      equipment.functional ? '#065f46' : '#991b1b',
-        }}>
-          {equipment.functional ? '✓ OK' : '✗ HS'}
-        </span>
       </div>
     </div>
   )

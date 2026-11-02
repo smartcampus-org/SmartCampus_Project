@@ -13,6 +13,8 @@ import Rooms             from './pages/Rooms'
 import RoomDetail        from './pages/RoomDetail'
 // SC-110 — Gestion du catalogue (create / edit)
 import RoomForm          from './pages/RoomForm'
+// SC-111 — Gestion des équipements
+import RoomEquipments    from './pages/RoomEquipments'
 
 // Protège les routes authentifiées
 function PrivateRoute({ children }) {
@@ -66,6 +68,9 @@ export default function App() {
         {/* SC-110 — Gestion catalogue : création et édition (ADMIN/PERSONNEL) */}
         <Route path="/rooms/new"       element={<PrivateRoute><RoomForm /></PrivateRoute>} />
         <Route path="/rooms/:id/edit"  element={<PrivateRoute><RoomForm /></PrivateRoute>} />
+
+        {/* SC-111 — Gestion des équipements d'une salle */}
+        <Route path="/rooms/:id/equipments" element={<PrivateRoute><RoomEquipments /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
