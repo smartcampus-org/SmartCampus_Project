@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import RoomCard from '../components/RoomCard'
 import RoomSearchFilters from '../components/RoomSearchFilters'
@@ -32,6 +32,10 @@ const INITIAL_FILTERS = {
 
 export default function Rooms() {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Message de succès (ex : après suppression depuis RoomDetail)
+  const successMsg = location.state?.success ?? ''
 
   // Récupération du rôle depuis localStorage
   const user = (() => {
@@ -144,6 +148,13 @@ export default function Rooms() {
           flexWrap: 'wrap',
           gap: 16,
         }}>
+
+        {/* Message de succès (après suppression / création) */}
+        {successMsg && (
+          <div className="alert alert-success" role="status" style={{ marginBottom: 20, width: '100%' }}>
+            ✅ {successMsg}
+          </div>
+        )}
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1f2937', margin: 0 }}>
               🚪 Catalogue des salles

@@ -1,50 +1,65 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import StatusBadge from '../components/StatusBadge'
 import RoomTypeBadge from '../components/RoomTypeBadge'
+import ConfirmModal from '../components/ConfirmModal'
 import { roomAPI } from '../services/api'
 
 /**
- * SC-109 — Page de détail d'une salle.
+ * SC-109 / SC-110 — Page de détail d'une salle.
  *
- * Affiche :
- *  - Informations complètes de la salle (type, statut, capacité, bâtiment, étage)
- *  - Liste des équipements avec état fonctionnel
- *  - Lien vers l'historique des statuts
- *  - Actions contextuelles selon le rôle (modifier, changer statut)
+ * SC-109 : affichage complet (infos, équipements, historique)
+ * SC-110 : actions de gestion (modifier, supprimer) pour ADMIN/PERSONNEL
  *
- * Règle SC-21 : une salle FERMEE retourne 404 pour un étudiant
- * (géré backend → le Frontend affiche un écran 404 générique)
+ * Règle SC-21 : salle FERMEE → 404 pour ETUDIANT (géré backend)
  */
 export default function RoomDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id }       = useParams()
+  const navigate     = useNavigate()
+  const location     = useLocation()
 
   const user = (() => {
     try { return JSON.parse(localStorage.getItem('user')) } catch { return null }
   })()
-  const role = user?.role ?? ''
+  const role      = user?.role ?? ''
   const canMutate = ['ADMIN', 'PERSONNEL'].includes(role)
 
-  const [room,    setRoom]    = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState('')
+  const [room,          setRoom]          = useState(null)
+  const [loading,       setLoading]       = useState(true)
+  const [error,         setError]         = useState('')
+  const [deleteOpen,    setDeleteOpen]    = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError,   setDeleteError]   = useState('')
+
+  // Message de succès transmis depuis RoomForm (après create/edit)
+  const successMsg = location.state?.success ?? ''
 
   useEffect(() => {
     roomAPI.getById(id)
       .then(res => setRoom(res.data))
       .catch(err => {
-        if (err.response?.status === 404) {
-          setError('404')
-        } else {
-          setError(err.response?.data?.message || 'Impossible de charger la salle.')
-        }
+        setError(err.response?.status === 404 ? '404' : (err.response?.data?.message || 'Impossible de charger la salle.'))
       })
       .finally(() => setLoading(false))
   }, [id])
 
-  // --- État : chargement ---
+  // --- Suppression ---
+  const handleDelete = async () => {
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      await roomAPI.delete(id)
+      navigate('/rooms', { state: { success: 'Salle supprimée avec succès.' } })
+    } catch (err) {
+      setDeleteError(err.response?.data?.message || 'Impossible de supprimer la salle.')
+      setDeleteLoading(false)
+      setDeleteOpen(false)
+    }
+  }
+
+  // ── États de chargement / erreur ─────────────────────────────────────────
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
@@ -54,7 +69,7 @@ export default function RoomDetail() {
             className="spinner"
             style={{ borderTopColor: '#2563eb', borderColor: '#e5e7eb', width: 40, height: 40, margin: '0 auto' }}
             role="status"
-            aria-label="Chargement"
+            aria-label="Chargement de la salle"
           />
           <p style={{ marginTop: 16 }}>Chargement de la salle…</p>
         </div>
@@ -62,7 +77,6 @@ export default function RoomDetail() {
     )
   }
 
-  // --- État : 404 ---
   if (error === '404') {
     return (
       <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
@@ -87,15 +101,12 @@ export default function RoomDetail() {
     )
   }
 
-  // --- État : erreur générique ---
   if (error) {
     return (
       <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
         <Navbar />
         <div className="dashboard" style={{ maxWidth: 800 }}>
-          <div className="alert alert-error" role="alert">
-            ⚠️ {error}
-          </div>
+          <div className="alert alert-error" role="alert">⚠️ {error}</div>
           <button
             className="btn btn-outline"
             style={{ width: 'auto', padding: '10px 24px' }}
@@ -108,10 +119,31 @@ export default function RoomDetail() {
     )
   }
 
-  // --- Rendu principal ---
+  // ── Rendu principal ──────────────────────────────────────────────────────
+
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
       <Navbar />
+
+      {/* Modal de confirmation de suppression */}
+      <ConfirmModal
+        isOpen={deleteOpen}
+        title="Supprimer la salle"
+        message={
+          <>
+            Voulez-vous vraiment supprimer la salle <strong>{room.roomNumber}</strong> ?
+            <br /><br />
+            <span style={{ color: '#dc2626', fontSize: 13 }}>
+              ⚠️ Cette action est irréversible. Les équipements et l'historique associés seront également supprimés.
+            </span>
+          </>
+        }
+        confirmLabel="Supprimer"
+        danger
+        loading={deleteLoading}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteOpen(false)}
+      />
 
       <main className="dashboard" style={{ maxWidth: 860 }}>
 
@@ -122,7 +154,21 @@ export default function RoomDetail() {
           <span style={{ color: '#1f2937', fontWeight: 500 }}>{room.roomNumber}</span>
         </nav>
 
-        {/* En-tête */}
+        {/* Message de succès (après create/edit) */}
+        {successMsg && (
+          <div className="alert alert-success" role="status" style={{ marginBottom: 20 }}>
+            ✅ {successMsg}
+          </div>
+        )}
+
+        {/* Erreur de suppression */}
+        {deleteError && (
+          <div className="alert alert-error" role="alert" style={{ marginBottom: 20 }}>
+            ⚠️ {deleteError}
+          </div>
+        )}
+
+        {/* ── Bannière ── */}
         <div style={{
           background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
           borderRadius: 12,
@@ -139,9 +185,13 @@ export default function RoomDetail() {
             <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>
               {room.building?.name} · Étage {room.floor}
             </div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 8px' }}>
+            <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 10px' }}>
               {room.roomNumber}
-              {room.name && <span style={{ fontWeight: 400, fontSize: 20, marginLeft: 10, opacity: 0.9 }}>— {room.name}</span>}
+              {room.name && (
+                <span style={{ fontWeight: 400, fontSize: 20, marginLeft: 10, opacity: 0.85 }}>
+                  — {room.name}
+                </span>
+              )}
             </h1>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <StatusBadge status={room.status} size="lg" />
@@ -149,42 +199,42 @@ export default function RoomDetail() {
             </div>
           </div>
 
-          {/* Actions (ADMIN/PERSONNEL) */}
+          {/* Actions ADMIN/PERSONNEL */}
           {canMutate && (
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button
-                className="btn btn-outline"
-                style={{ width: 'auto', padding: '9px 18px', fontSize: 14, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.4)', color: 'white' }}
+                style={ghostBtn}
                 onClick={() => navigate(`/rooms/${room.id}/edit`)}
+                aria-label="Modifier la salle"
               >
                 ✏️ Modifier
               </button>
               <button
-                className="btn btn-outline"
-                style={{ width: 'auto', padding: '9px 18px', fontSize: 14, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.4)', color: 'white' }}
-                onClick={() => navigate(`/rooms/${room.id}/status`)}
+                style={{ ...ghostBtn, background: 'rgba(239,68,68,0.2)', borderColor: 'rgba(239,68,68,0.5)' }}
+                onClick={() => setDeleteOpen(true)}
+                aria-label="Supprimer la salle"
               >
-                🔄 Changer le statut
+                🗑️ Supprimer
               </button>
             </div>
           )}
         </div>
 
-        {/* Informations générales */}
+        {/* ── Informations générales ── */}
         <div className="profile-card" style={{ marginBottom: 24 }}>
           <h2>📋 Informations générales</h2>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 20,
-          }}>
-            <InfoItem label="Bâtiment"    value={room.building?.name} icon="🏢" />
-            <InfoItem label="Étage"       value={`Étage ${room.floor}`} icon="📍" />
-            <InfoItem label="Capacité"    value={`${room.capacity} places`} icon="👥" />
-            <InfoItem label="Type"        value={<RoomTypeBadge type={room.type} />} icon="🏷️" />
-            <InfoItem label="Statut"      value={<StatusBadge status={room.status} />} icon="🔵" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20 }}>
+            <InfoItem label="Bâtiment"  value={room.building?.name}              icon="🏢" />
+            <InfoItem label="Étage"     value={`Étage ${room.floor}`}             icon="📍" />
+            <InfoItem label="Capacité"  value={`${room.capacity} places`}         icon="👥" />
+            <InfoItem label="Type"      value={<RoomTypeBadge type={room.type} />} icon="🏷️" />
+            <InfoItem label="Statut"    value={<StatusBadge status={room.status} />} icon="🔵" />
             {room.building?.floors !== undefined && (
-              <InfoItem label="Nb étages (bât.)" value={`${room.building.floors} étage${room.building.floors > 1 ? 's' : ''}`} icon="🏗️" />
+              <InfoItem
+                label="Nb étages (bât.)"
+                value={`${room.building.floors} étage${room.building.floors > 1 ? 's' : ''}`}
+                icon="🏗️"
+              />
             )}
           </div>
           {room.description && (
@@ -199,9 +249,12 @@ export default function RoomDetail() {
           )}
         </div>
 
-        {/* Équipements */}
+        {/* ── Équipements ── */}
         <div className="profile-card" style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid #e5e7eb',
+          }}>
             <h2 style={{ margin: 0, borderBottom: 'none', paddingBottom: 0 }}>
               🖥️ Équipements
               <span style={{ marginLeft: 8, fontSize: 13, fontWeight: 500, color: '#9ca3af' }}>
@@ -226,16 +279,17 @@ export default function RoomDetail() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {room.equipments.map(eq => (
-                <EquipmentRow key={eq.id} equipment={eq} />
-              ))}
+              {room.equipments.map(eq => <EquipmentRow key={eq.id} equipment={eq} />)}
             </div>
           )}
         </div>
 
-        {/* Historique des statuts */}
+        {/* ── Historique des statuts ── */}
         <div className="profile-card" style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #e5e7eb',
+          }}>
             <h2 style={{ margin: 0, borderBottom: 'none', paddingBottom: 0 }}>
               📅 Historique des statuts
             </h2>
@@ -251,7 +305,7 @@ export default function RoomDetail() {
           </p>
         </div>
 
-        {/* Méta */}
+        {/* ── Méta ── */}
         <div style={{ display: 'flex', gap: 20, fontSize: 12, color: '#9ca3af', justifyContent: 'flex-end' }}>
           <span>Créé le {formatDate(room.createdAt)}</span>
           <span>Mis à jour le {formatDate(room.updatedAt)}</span>
@@ -262,7 +316,21 @@ export default function RoomDetail() {
   )
 }
 
-// --- Sous-composants internes ---
+// ── Styles ──────────────────────────────────────────────────────────────────
+
+const ghostBtn = {
+  padding: '9px 18px',
+  fontSize: 14,
+  fontWeight: 500,
+  cursor: 'pointer',
+  background: 'rgba(255,255,255,0.15)',
+  border: '1px solid rgba(255,255,255,0.4)',
+  borderRadius: 8,
+  color: 'white',
+  transition: 'background 0.15s',
+}
+
+// ── Sous-composants ──────────────────────────────────────────────────────────
 
 function InfoItem({ label, value, icon }) {
   return (
@@ -280,33 +348,23 @@ function InfoItem({ label, value, icon }) {
 function EquipmentRow({ equipment }) {
   return (
     <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 12,
-      padding: '10px 14px',
-      background: '#f9fafb',
-      borderRadius: 8,
-      border: '1px solid #e5e7eb',
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '10px 14px', background: '#f9fafb',
+      borderRadius: 8, border: '1px solid #e5e7eb',
     }}>
       <span style={{ fontSize: 20 }}>🖥️</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>
-          {equipment.name}
-        </div>
+        <div style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>{equipment.name}</div>
         <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
-          {equipment.type}
-          {equipment.notes && ` · ${equipment.notes}`}
+          {equipment.type}{equipment.notes && ` · ${equipment.notes}`}
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>
-          x{equipment.quantity}
-        </span>
+        <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>x{equipment.quantity}</span>
         <span style={{
-          fontSize: 11, fontWeight: 600,
-          padding: '2px 8px', borderRadius: 10,
+          fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10,
           background: equipment.functional ? '#d1fae5' : '#fee2e2',
-          color: equipment.functional ? '#065f46' : '#991b1b',
+          color:      equipment.functional ? '#065f46' : '#991b1b',
         }}>
           {equipment.functional ? '✓ OK' : '✗ HS'}
         </span>
@@ -317,7 +375,5 @@ function EquipmentRow({ equipment }) {
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: 'long', year: 'numeric',
-  })
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }

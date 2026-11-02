@@ -11,6 +11,8 @@ import DashboardEtudiant from './pages/DashboardEtudiant'
 // SC-109 — Catalogue des salles
 import Rooms             from './pages/Rooms'
 import RoomDetail        from './pages/RoomDetail'
+// SC-110 — Gestion du catalogue (create / edit)
+import RoomForm          from './pages/RoomForm'
 
 // Protège les routes authentifiées
 function PrivateRoute({ children }) {
@@ -60,6 +62,10 @@ export default function App() {
         {/* SC-109 — Catalogue des salles (tous les rôles authentifiés) */}
         <Route path="/rooms"     element={<PrivateRoute><Rooms /></PrivateRoute>} />
         <Route path="/rooms/:id" element={<PrivateRoute><RoomDetail /></PrivateRoute>} />
+
+        {/* SC-110 — Gestion catalogue : création et édition (ADMIN/PERSONNEL) */}
+        <Route path="/rooms/new"       element={<PrivateRoute><RoomForm /></PrivateRoute>} />
+        <Route path="/rooms/:id/edit"  element={<PrivateRoute><RoomForm /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
