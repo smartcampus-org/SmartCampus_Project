@@ -40,6 +40,7 @@ export default function Navbar() {
 
       <div className="navbar-actions">
         <Link to={dashboardPath} className="navbar-link">Tableau de bord</Link>
+        <Link to="/rooms" className="navbar-link">🚪 Salles</Link>
         <Link to="/profile" className="navbar-link">Mon profil</Link>
 
         <div className="navbar-user">

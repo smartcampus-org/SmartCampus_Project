@@ -1,13 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Home            from './pages/Home'
-import Login           from './pages/Login'
-import Register        from './pages/Register'
-import Profile         from './pages/Profile'
-import ForgotPassword  from './pages/ForgotPassword'
-import ResetPassword   from './pages/ResetPassword'
-import Dashboard       from './pages/Dashboard'
-import DashboardAdmin  from './pages/DashboardAdmin'
+import Home              from './pages/Home'
+import Login             from './pages/Login'
+import Register          from './pages/Register'
+import Profile           from './pages/Profile'
+import ForgotPassword    from './pages/ForgotPassword'
+import ResetPassword     from './pages/ResetPassword'
+import Dashboard         from './pages/Dashboard'
+import DashboardAdmin    from './pages/DashboardAdmin'
 import DashboardEtudiant from './pages/DashboardEtudiant'
+// SC-109 — Catalogue des salles
+import Rooms             from './pages/Rooms'
+import RoomDetail        from './pages/RoomDetail'
 
 // Protège les routes authentifiées
 function PrivateRoute({ children }) {
@@ -53,6 +56,10 @@ export default function App() {
           path="/dashboard/etudiant"
           element={<RoleRoute role="ETUDIANT"><DashboardEtudiant /></RoleRoute>}
         />
+
+        {/* SC-109 — Catalogue des salles (tous les rôles authentifiés) */}
+        <Route path="/rooms"     element={<PrivateRoute><Rooms /></PrivateRoute>} />
+        <Route path="/rooms/:id" element={<PrivateRoute><RoomDetail /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
