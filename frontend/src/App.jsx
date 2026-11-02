@@ -15,6 +15,8 @@ import RoomDetail        from './pages/RoomDetail'
 import RoomForm          from './pages/RoomForm'
 // SC-111 — Gestion des équipements
 import RoomEquipments    from './pages/RoomEquipments'
+// SC-112 — Gestion des statuts et historique
+import RoomStatusHistory from './pages/RoomStatusHistory'
 
 // Protège les routes authentifiées
 function PrivateRoute({ children }) {
@@ -71,6 +73,9 @@ export default function App() {
 
         {/* SC-111 — Gestion des équipements d'une salle */}
         <Route path="/rooms/:id/equipments" element={<PrivateRoute><RoomEquipments /></PrivateRoute>} />
+
+        {/* SC-112 — Historique des statuts d'une salle */}
+        <Route path="/rooms/:id/history" element={<PrivateRoute><RoomStatusHistory /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

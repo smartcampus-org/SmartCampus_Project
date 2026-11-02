@@ -5,6 +5,8 @@ import StatusBadge from '../components/StatusBadge'
 import RoomTypeBadge from '../components/RoomTypeBadge'
 import ConfirmModal from '../components/ConfirmModal'
 import EquipmentList from '../components/EquipmentList'
+import StatusChangeModal from '../components/StatusChangeModal'
+import StatusHistory from '../components/StatusHistory'
 import { roomAPI } from '../services/api'
 
 /**
@@ -34,6 +36,11 @@ export default function RoomDetail() {
   const [deleteError,   setDeleteError]   = useState('')
   // SC-111 — équipements gérés localement pour permettre la mise à jour inline
   const [equipments, setEquipments] = useState([])
+  // SC-112 — changement de statut
+  const [statusModalOpen,    setStatusModalOpen]    = useState(false)
+  const [statusChangeLoading,setStatusChangeLoading]= useState(false)
+  const [statusChangeError,  setStatusChangeError]  = useState('')
+  const [historyKey,         setHistoryKey]         = useState(0)
 
   // Message de succès transmis depuis RoomForm (après create/edit)
   const successMsg = location.state?.success ?? ''
@@ -61,6 +68,22 @@ export default function RoomDetail() {
       setDeleteError(err.response?.data?.message || 'Impossible de supprimer la salle.')
       setDeleteLoading(false)
       setDeleteOpen(false)
+    }
+  }
+
+  // --- SC-112 : changement de statut ---
+  const handleStatusChange = async ({ newStatus, reason }) => {
+    setStatusChangeLoading(true)
+    setStatusChangeError('')
+    try {
+      const res = await roomAPI.changeStatus(id, { newStatus, reason })
+      setRoom(prev => ({ ...prev, status: res.data.status }))
+      setStatusModalOpen(false)
+      setHistoryKey(k => k + 1)   // force le rechargement de StatusHistory
+    } catch (err) {
+      setStatusChangeError(err.response?.data?.message || 'Impossible de changer le statut.')
+    } finally {
+      setStatusChangeLoading(false)
     }
   }
 
@@ -151,6 +174,15 @@ export default function RoomDetail() {
         onCancel={() => setDeleteOpen(false)}
       />
 
+      {/* SC-112 — Modal changement de statut */}
+      <StatusChangeModal
+        isOpen={statusModalOpen}
+        currentStatus={room.status}
+        roomNumber={room.roomNumber}
+        loading={statusChangeLoading}
+        onConfirm={handleStatusChange}
+        onCancel={() => { setStatusModalOpen(false); setStatusChangeError('') }}
+      />
       <main className="dashboard" style={{ maxWidth: 860 }}>
 
         {/* Fil d'Ariane */}
@@ -171,6 +203,13 @@ export default function RoomDetail() {
         {deleteError && (
           <div className="alert alert-error" role="alert" style={{ marginBottom: 20 }}>
             ⚠️ {deleteError}
+          </div>
+        )}
+
+        {/* Erreur de changement de statut */}
+        {statusChangeError && (
+          <div className="alert alert-error" role="alert" style={{ marginBottom: 20 }}>
+            ⚠️ {statusChangeError}
           </div>
         )}
 
@@ -214,6 +253,13 @@ export default function RoomDetail() {
                 aria-label="Modifier la salle"
               >
                 ✏️ Modifier
+              </button>
+              <button
+                style={ghostBtn}
+                onClick={() => { setStatusChangeError(''); setStatusModalOpen(true) }}
+                aria-label="Changer le statut de la salle"
+              >
+                🔄 Statut
               </button>
               <button
                 style={{ ...ghostBtn, background: 'rgba(239,68,68,0.2)', borderColor: 'rgba(239,68,68,0.5)' }}
@@ -300,9 +346,8 @@ export default function RoomDetail() {
               Voir tout →
             </Link>
           </div>
-          <p style={{ fontSize: 14, color: '#9ca3af' }}>
-            Consultez l'historique complet des changements de statut pour cette salle.
-          </p>
+          {/* SC-112 — Timeline compacte (3 dernières entrées) */}
+          <StatusHistory key={historyKey} roomId={room.id} compact={true} />
         </div>
 
         {/* ── Méta ── */}
