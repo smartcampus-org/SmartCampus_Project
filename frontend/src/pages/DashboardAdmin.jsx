@@ -14,7 +14,7 @@ const ACTIONS = [
   { icon: '🔑', title: 'Gestion des rôles', desc: 'Attribuer et modifier les permissions', color: '#ede9fe', path: null },
   { icon: '🚪', title: 'Catalogue des salles', desc: 'Consulter et gérer les salles du campus', color: '#d1fae5', path: '/rooms' },
   { icon: '📋', title: 'Journal d\'audit', desc: 'Consulter les connexions et actions', color: '#fef3c7', path: null },
-  { icon: '📊', title: 'Rapports', desc: 'Statistiques et exports de données', color: '#fce7f3', path: null },
+  { icon: '📊', title: 'Export CSV', desc: 'Télécharger le catalogue des salles', color: '#fce7f3', path: '/rooms/export' },
   { icon: '⚙️', title: 'Paramètres', desc: 'Configuration générale du système', color: '#fee2e2', path: null },
 ]
 

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import RoomCard from '../components/RoomCard'
 import RoomSearchFilters from '../components/RoomSearchFilters'
 import Pagination from '../components/Pagination'
+import ExportButton from '../components/ExportButton'
 import { roomAPI, buildingAPI } from '../services/api'
 
 /**
@@ -54,7 +55,7 @@ export default function Rooms() {
   const [totalItems, setTotalItems] = useState(0)
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState('')
-  const [exporting,  setExporting]  = useState(false)
+  const [exportError, setExportError] = useState('')
 
   // --- Chargement des bâtiments (une seule fois) ---
   useEffect(() => {
@@ -112,26 +113,6 @@ export default function Rooms() {
     setPage(0)
   }
 
-  // --- Export CSV ---
-  const handleExport = async () => {
-    setExporting(true)
-    try {
-      const res = await roomAPI.exportCsv()
-      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }))
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'smartcampus_rooms.csv'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
-    } catch {
-      setError('Impossible de générer l\'export CSV.')
-    } finally {
-      setExporting(false)
-    }
-  }
-
   // --- Rendu ---
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
@@ -155,6 +136,18 @@ export default function Rooms() {
             ✅ {successMsg}
           </div>
         )}
+
+        {/* SC-113 — Erreur d'export CSV */}
+        {exportError && (
+          <div className="alert alert-error" role="alert" style={{ marginBottom: 20, width: '100%' }}>
+            ⚠️ {exportError}
+            <button
+              onClick={() => setExportError('')}
+              style={{ marginLeft: 10, fontSize: 12, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}
+              aria-label="Fermer l'alerte"
+            >✕</button>
+          </div>
+        )}
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1f2937', margin: 0 }}>
               🚪 Catalogue des salles
@@ -176,17 +169,21 @@ export default function Rooms() {
               </button>
             )}
 
-            {/* Export CSV */}
+            {/* SC-113 — Export CSV via ExportButton + lien page dédiée */}
             {canExport && (
-              <button
-                className="btn btn-outline"
-                style={{ width: 'auto', padding: '10px 20px', fontSize: 14 }}
-                onClick={handleExport}
-                disabled={exporting}
-                aria-label="Exporter en CSV"
-              >
-                {exporting ? <><span className="spinner" style={{ borderTopColor: '#374151', borderColor: '#e5e7eb' }} /> Export…</> : '📥 Export CSV'}
-              </button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <ExportButton
+                  onError={msg => setExportError(msg)}
+                  onSuccess={() => setExportError('')}
+                />
+                <Link
+                  to="/rooms/export"
+                  style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                  title="Options d'export avancées"
+                >
+                  Options ↗
+                </Link>
+              </div>
             )}
           </div>
         </div>

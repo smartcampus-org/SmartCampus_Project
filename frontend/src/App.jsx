@@ -17,6 +17,8 @@ import RoomForm          from './pages/RoomForm'
 import RoomEquipments    from './pages/RoomEquipments'
 // SC-112 — Gestion des statuts et historique
 import RoomStatusHistory from './pages/RoomStatusHistory'
+// SC-113 — Export du catalogue
+import RoomsExport       from './pages/RoomsExport'
 
 // Protège les routes authentifiées
 function PrivateRoute({ children }) {
@@ -76,6 +78,9 @@ export default function App() {
 
         {/* SC-112 — Historique des statuts d'une salle */}
         <Route path="/rooms/:id/history" element={<PrivateRoute><RoomStatusHistory /></PrivateRoute>} />
+
+        {/* SC-113 — Page d'export du catalogue (ADMIN/PERSONNEL/PROFESSEUR) */}
+        <Route path="/rooms/export" element={<PrivateRoute><RoomsExport /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

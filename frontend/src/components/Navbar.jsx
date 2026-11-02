@@ -41,6 +41,10 @@ export default function Navbar() {
       <div className="navbar-actions">
         <Link to={dashboardPath} className="navbar-link">Tableau de bord</Link>
         <Link to="/rooms" className="navbar-link">🚪 Salles</Link>
+        {/* SC-113 — Lien export visible pour ADMIN, PERSONNEL, PROFESSEUR */}
+        {['ADMIN', 'PERSONNEL', 'PROFESSEUR'].includes(user?.role) && (
+          <Link to="/rooms/export" className="navbar-link">📥 Export</Link>
+        )}
         <Link to="/profile" className="navbar-link">Mon profil</Link>
 
         <div className="navbar-user">
