@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { etudiantAPI, userAPI } from '../services/api'
-
 const MODULES = [
   { icon: '📐', label: 'Mathématiques', note: '15.5/20', statut: 'En cours', color: '#dbeafe' },
   { icon: '💻', label: 'Algorithmique', note: '17/20',   statut: 'En cours', color: '#d1fae5' },
@@ -11,12 +10,12 @@ const MODULES = [
 ]
 
 const SERVICES = [
-  { icon: '📅', title: 'Emploi du temps',     desc: 'Planning hebdomadaire de vos cours',      color: '#dbeafe' },
-  { icon: '📝', title: 'Notes & résultats',   desc: 'Consulter vos relevés de notes',          color: '#d1fae5' },
-  { icon: '🎓', title: 'Scolarité',           desc: 'Demandes et documents administratifs',    color: '#fef3c7' },
-  { icon: '📚', title: 'Bibliothèque',        desc: 'Ressources pédagogiques en ligne',        color: '#ede9fe' },
-  { icon: '💬', title: 'Messagerie',          desc: 'Contacter vos professeurs',               color: '#d1fae5' },
-  { icon: '🏆', title: 'Classements',         desc: 'Voir votre position dans la promotion',   color: '#fce7f3' },
+  { icon: '📅', title: 'Emploi du temps',     desc: 'Planning hebdomadaire de vos cours',      color: '#dbeafe', path: null },
+  { icon: '🚪', title: 'Salles du campus',    desc: 'Consulter les salles disponibles',        color: '#d1fae5', path: '/rooms' },
+  { icon: '📝', title: 'Notes & résultats',   desc: 'Consulter vos relevés de notes',          color: '#d1fae5', path: null },
+  { icon: '🎓', title: 'Scolarité',           desc: 'Demandes et documents administratifs',    color: '#fef3c7', path: null },
+  { icon: '📚', title: 'Bibliothèque',        desc: 'Ressources pédagogiques en ligne',        color: '#ede9fe', path: null },
+  { icon: '💬', title: 'Messagerie',          desc: 'Contacter vos professeurs',               color: '#d1fae5', path: null },
 ]
 
 const AGENDA = [
@@ -26,8 +25,7 @@ const AGENDA = [
 ]
 
 export default function DashboardEtudiant() {
-  const navigate = useNavigate()
-  const [profile, setProfile]  = useState(null)
+  const navigate = useNavigate()  const [profile, setProfile]  = useState(null)
   const [apiMsg,  setApiMsg]   = useState('')
   const [loading, setLoading]  = useState(true)
 
@@ -177,10 +175,11 @@ export default function DashboardEtudiant() {
                   background: s.color,
                   borderRadius: 12,
                   padding: '18px 16px',
-                  cursor: 'pointer',
+                  cursor: s.path ? 'pointer' : 'default',
                   border: '1px solid rgba(0,0,0,0.05)',
                   transition: 'transform 0.15s, box-shadow 0.15s',
                 }}
+                onClick={() => s.path && navigate(s.path)}
                 onMouseOver={e => {
                   e.currentTarget.style.transform = 'translateY(-3px)'
                   e.currentTarget.style.boxShadow = 'var(--shadow-lg)'

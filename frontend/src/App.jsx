@@ -1,13 +1,24 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Home            from './pages/Home'
-import Login           from './pages/Login'
-import Register        from './pages/Register'
-import Profile         from './pages/Profile'
-import ForgotPassword  from './pages/ForgotPassword'
-import ResetPassword   from './pages/ResetPassword'
-import Dashboard       from './pages/Dashboard'
-import DashboardAdmin  from './pages/DashboardAdmin'
+import Home              from './pages/Home'
+import Login             from './pages/Login'
+import Register          from './pages/Register'
+import Profile           from './pages/Profile'
+import ForgotPassword    from './pages/ForgotPassword'
+import ResetPassword     from './pages/ResetPassword'
+import Dashboard         from './pages/Dashboard'
+import DashboardAdmin    from './pages/DashboardAdmin'
 import DashboardEtudiant from './pages/DashboardEtudiant'
+// SC-109 — Catalogue des salles
+import Rooms             from './pages/Rooms'
+import RoomDetail        from './pages/RoomDetail'
+// SC-110 — Gestion du catalogue (create / edit)
+import RoomForm          from './pages/RoomForm'
+// SC-111 — Gestion des équipements
+import RoomEquipments    from './pages/RoomEquipments'
+// SC-112 — Gestion des statuts et historique
+import RoomStatusHistory from './pages/RoomStatusHistory'
+// SC-113 — Export du catalogue
+import RoomsExport       from './pages/RoomsExport'
 
 // Protège les routes authentifiées
 function PrivateRoute({ children }) {
@@ -53,6 +64,23 @@ export default function App() {
           path="/dashboard/etudiant"
           element={<RoleRoute role="ETUDIANT"><DashboardEtudiant /></RoleRoute>}
         />
+
+        {/* SC-109 — Catalogue des salles (tous les rôles authentifiés) */}
+        <Route path="/rooms"     element={<PrivateRoute><Rooms /></PrivateRoute>} />
+        <Route path="/rooms/:id" element={<PrivateRoute><RoomDetail /></PrivateRoute>} />
+
+        {/* SC-110 — Gestion catalogue : création et édition (ADMIN/PERSONNEL) */}
+        <Route path="/rooms/new"       element={<PrivateRoute><RoomForm /></PrivateRoute>} />
+        <Route path="/rooms/:id/edit"  element={<PrivateRoute><RoomForm /></PrivateRoute>} />
+
+        {/* SC-111 — Gestion des équipements d'une salle */}
+        <Route path="/rooms/:id/equipments" element={<PrivateRoute><RoomEquipments /></PrivateRoute>} />
+
+        {/* SC-112 — Historique des statuts d'une salle */}
+        <Route path="/rooms/:id/history" element={<PrivateRoute><RoomStatusHistory /></PrivateRoute>} />
+
+        {/* SC-113 — Page d'export du catalogue (ADMIN/PERSONNEL/PROFESSEUR) */}
+        <Route path="/rooms/export" element={<PrivateRoute><RoomsExport /></PrivateRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

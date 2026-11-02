@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { adminAPI, userAPI } from '../services/api'
-
 const STATS = [
   { icon: '👥', label: 'Utilisateurs', value: '—', color: '#dbeafe', key: 'users' },
   { icon: '🎓', label: 'Étudiants', value: '—', color: '#d1fae5', key: 'etudiants' },
@@ -11,17 +10,16 @@ const STATS = [
 ]
 
 const ACTIONS = [
-  { icon: '👤', title: 'Gérer les utilisateurs', desc: 'Créer, modifier ou désactiver des comptes', color: '#dbeafe' },
-  { icon: '🔑', title: 'Gestion des rôles', desc: 'Attribuer et modifier les permissions', color: '#ede9fe' },
-  { icon: '📋', title: 'Journal d\'audit', desc: 'Consulter les connexions et actions', color: '#fef3c7' },
-  { icon: '📧', title: 'Notifications', desc: 'Envoyer des messages aux utilisateurs', color: '#d1fae5' },
-  { icon: '📊', title: 'Rapports', desc: 'Statistiques et exports de données', color: '#fce7f3' },
-  { icon: '⚙️', title: 'Paramètres', desc: 'Configuration générale du système', color: '#fee2e2' },
+  { icon: '👤', title: 'Gérer les utilisateurs', desc: 'Créer, modifier ou désactiver des comptes', color: '#dbeafe', path: null },
+  { icon: '🔑', title: 'Gestion des rôles', desc: 'Attribuer et modifier les permissions', color: '#ede9fe', path: null },
+  { icon: '🚪', title: 'Catalogue des salles', desc: 'Consulter et gérer les salles du campus', color: '#d1fae5', path: '/rooms' },
+  { icon: '📋', title: 'Journal d\'audit', desc: 'Consulter les connexions et actions', color: '#fef3c7', path: null },
+  { icon: '📊', title: 'Export CSV', desc: 'Télécharger le catalogue des salles', color: '#fce7f3', path: '/rooms/export' },
+  { icon: '⚙️', title: 'Paramètres', desc: 'Configuration générale du système', color: '#fee2e2', path: null },
 ]
 
 export default function DashboardAdmin() {
-  const navigate  = useNavigate()
-  const [profile, setProfile]   = useState(null)
+  const navigate  = useNavigate()  const [profile, setProfile]   = useState(null)
   const [apiMsg,  setApiMsg]    = useState('')
   const [loading, setLoading]   = useState(true)
 
@@ -142,10 +140,11 @@ export default function DashboardAdmin() {
                   background: a.color,
                   borderRadius: 12,
                   padding: '20px 16px',
-                  cursor: 'pointer',
+                  cursor: a.path ? 'pointer' : 'default',
                   border: '1px solid rgba(0,0,0,0.05)',
                   transition: 'transform 0.15s, box-shadow 0.15s',
                 }}
+                onClick={() => a.path && navigate(a.path)}
                 onMouseOver={e => {
                   e.currentTarget.style.transform = 'translateY(-3px)'
                   e.currentTarget.style.boxShadow = 'var(--shadow-lg)'

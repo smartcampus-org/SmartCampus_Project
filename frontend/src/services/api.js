@@ -46,4 +46,35 @@ export const etudiantAPI = {
   test: () => api.get('/etudiant/test'),
 }
 
+// SC-109 — API Bâtiments
+export const buildingAPI = {
+  getAll: () => api.get('/buildings'),
+  getById: (id) => api.get(`/buildings/${id}`),
+  create: (data) => api.post('/buildings', data),
+  update: (id, data) => api.put(`/buildings/${id}`, data),
+  delete: (id) => api.delete(`/buildings/${id}`),
+}
+
+// SC-109 — API Salles
+export const roomAPI = {
+  getAll: (params) => api.get('/rooms', { params }),
+  getById: (id) => api.get(`/rooms/${id}`),
+  search: (params) => api.get('/rooms/search', { params }),
+  create: (data) => api.post('/rooms', data),
+  update: (id, data) => api.put(`/rooms/${id}`, data),
+  delete: (id) => api.delete(`/rooms/${id}`),
+  changeStatus: (id, data) => api.patch(`/rooms/${id}/status`, data),
+  getStatusHistory: (id, params) => api.get(`/rooms/${id}/status-history`, { params }),
+  exportCsv: () => api.get('/rooms/export', { responseType: 'blob' }),
+}
+
+// SC-109 — API Équipements
+export const equipmentAPI = {
+  findByRoom: (roomId) => api.get(`/rooms/${roomId}/equipments`),
+  getById: (roomId, id) => api.get(`/rooms/${roomId}/equipments/${id}`),
+  create: (roomId, data) => api.post(`/rooms/${roomId}/equipments`, data),
+  update: (roomId, id, data) => api.put(`/rooms/${roomId}/equipments/${id}`, data),
+  delete: (roomId, id) => api.delete(`/rooms/${roomId}/equipments/${id}`),
+}
+
 export default api
